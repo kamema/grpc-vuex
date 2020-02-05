@@ -18,13 +18,17 @@ export function fromJSON(json) {
   return message.fromObject(message)
 }
 
+export function getNested(json = {}, str) {
+  const nested = json.nested ? _.chain(json).result('nested').toArray().first().value() : {}
+  if (nested[str] || !nested.nested) {
+    return json.nested
+  }
+  return getNested(nested)
+}
+
 export function getServices(json) {
-  const services = _.chain(json)
-    .result('nested')
-    .toArray()
-    .first()
-    .result('nested')
-    .map((value, key)=>{
+  const services = _.chain(getNested(json, 'methods'))
+    .map((value, key) => {
       return _.has(value, 'methods') && [key, value]
     })
     .compact()
@@ -34,12 +38,8 @@ export function getServices(json) {
 }
 
 export function getMessages(json) {
-  return _.chain(json)
-    .result('nested')
-    .toArray()
-    .first()
-    .result('nested')
-    .map((value, key)=>{
+  return _.chain(getNested(json, 'fields'))
+    .map((value, key) => {
       return _.has(value, 'fields') && [key, value]
     })
     .compact()
