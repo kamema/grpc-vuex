@@ -351,13 +351,17 @@ function fromJSON(json) {
   return message.fromObject(message)
 }
 
+function getNested(json = {}, str) {
+  const nested = json.nested ? external_lodash_default.a.chain(json).result('nested').toArray().first().value() : {}
+  if (nested[str] || !nested.nested) {
+    return json.nested
+  }
+  return getNested(nested)
+}
+
 function getServices(json) {
-  const services = external_lodash_default.a.chain(json)
-    .result('nested')
-    .toArray()
-    .first()
-    .result('nested')
-    .map((value, key)=>{
+  const services = external_lodash_default.a.chain(getNested(json, 'methods'))
+    .map((value, key) => {
       return external_lodash_default.a.has(value, 'methods') && [key, value]
     })
     .compact()
@@ -367,12 +371,8 @@ function getServices(json) {
 }
 
 function getMessages(json) {
-  return external_lodash_default.a.chain(json)
-    .result('nested')
-    .toArray()
-    .first()
-    .result('nested')
-    .map((value, key)=>{
+  return external_lodash_default.a.chain(getNested(json, 'fields'))
+    .map((value, key) => {
       return external_lodash_default.a.has(value, 'fields') && [key, value]
     })
     .compact()
